@@ -6,7 +6,7 @@
 
 | Méthode | Endpoint       | Description                                              | Fait ? |
 | ------- | -------------- | -------------------------------------------------------- | ------ |
-| POST    | `/auth/signup` | Crée un nouveau compte utilisateur (citoyen)             |        |
+| POST    | `/auth/signup` | Crée un nouveau compte utilisateur (citoyen)             |  OUI   |
 | POST    | `/auth/login`  | Authentifie un utilisateur et retourne un JWT            |        |
 | GET     | `/auth/me`     | Retourne le profil de l’utilisateur connecté             |        |
 | POST    |                | Créer un nouveau compte utilisateur (oauth)              |        |
