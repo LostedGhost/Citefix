@@ -12,7 +12,10 @@ import { ComplaintStatut } from './complaint-statut.enum';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { Roles } from 'src/auth/guards/roles/roles.decorator';
 import { Role } from 'src/users/roles.enum';
+import { RolesGuard } from 'src/shared/guards/roles.guard';
+
 @Controller('complaints')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ComplaintsController {
   constructor(private readonly complaintsService: ComplaintsService) {}
 
