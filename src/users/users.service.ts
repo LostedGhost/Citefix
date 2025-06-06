@@ -21,4 +21,25 @@ export class UsersService {
   async findByEmail(email: string) {
     return this.userModel.findOne({ email }).exec();
   }
+
+  async findById(id: string) {
+    return this.userModel.findById(id).select('-password').exec();
+  }
+
+  async update(userId: string, updateData: Partial<any>) {
+    return this.userModel.findByIdAndUpdate(userId, updateData, { new: true }).select('-password').exec();
+  }
+
+  async deactivate(userId: string) {
+    return this.userModel.findByIdAndUpdate(userId, { isActive: false }, { new: true }).exec();
+  }
+
+  async activate(userId: string) {
+    return this.userModel.findByIdAndUpdate(userId, { isActive: true }, { new: true }).exec();
+  }
+
+  async findAll() {
+    return this.userModel.find().select('-password').exec();
+  }
+
 }
