@@ -19,10 +19,10 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.usersService.findByEmail(dto.email);
-    if (!user) throw new UnauthorizedException('Utilisateur inconnu');
+    if (!user) throw new UnauthorizedException('Informations incorrects');
 
     const isMatch = await bcrypt.compare(dto.password, user.password);
-    if (!isMatch) throw new UnauthorizedException('Mot de passe incorrect');
+    if (!isMatch) throw new UnauthorizedException('Informations incorrects');
 
     const payload = { sub: user._id, email: user.email, role: user.role };
     return { access_token: this.jwtService.sign(payload) };
