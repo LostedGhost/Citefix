@@ -6,6 +6,8 @@ import {
   Get,
   UseGuards,
   Request,
+  Res,
+  Header,
 } from '@nestjs/common';
 import { ComplaintsService } from './complaints.service';
 import { ComplaintStatut } from './complaint-statut.enum';
@@ -18,7 +20,6 @@ import { RolesGuard } from 'src/shared/guards/roles.guard';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ComplaintsController {
   constructor(private readonly complaintsService: ComplaintsService) {}
-
 
   @Roles(Role.TECHNICIEN)
   @Patch(':id/start-intervention')
@@ -88,8 +89,10 @@ export class ComplaintsController {
   }
 
   @Get('export')
-  exportComplaints() {
-    return this.complaintsService.exportComplaints();
+  @Header('Content-Disposition', 'attachment; filename="plaintes.csv"')
+  async exportToCsv() {
+    const csv = await this.complaintsService.exportPlaintes();
+    return csv;
   }
 
   @Patch(':id/disable')

@@ -37,6 +37,9 @@ export class Complaint extends Document {
   @Prop()
   fonds_recu?: number;
 
+  @Prop({ default: true })
+  is_active: boolean;
+
   @Prop({
     type: [
       {
