@@ -1,51 +1,76 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { Db, ObjectId } from 'mongodb';
-
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Complaint } from './schema/complaint.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { ComplaintStatut } from './complaint-statut.enum';
 @Injectable()
 export class ComplaintsService {
-  private complaintsCollection;
-
-  constructor(@Inject('MONGO_CONNECTION') private readonly db: Db) {
-    this.complaintsCollection = this.db.collection('complaints');
-  }
-
-  async filterComplaints(filters: any) {
-    const query: any = {};
-    if (filters.zone) query.zone = filters.zone;
-    if (filters.categorie) query.categorie = filters.categorie;
-    if (filters.statut) query.status = filters.statut;
-    if (filters.dateDebut || filters.dateFin) {
-      query.date = {};
-      if (filters.dateDebut) query.date.$gte = new Date(filters.dateDebut);
-      if (filters.dateFin) query.date.$lte = new Date(filters.dateFin);
+  constructor(
+    @InjectModel(Complaint.name)
+    private complaintModel: Model<Complaint>,
+  ) {}
+  /**
+   * Met à jour le statut d'une plainte.
+   * @param id L'identifiant de la plainte.
+   * @param newStatut Le nouveau statut de la plainte.
+   * @returns La plainte mise à jour.
+   * @throws NotFoundException si la plainte n'est pas trouvée.
+   */
+  async updateComplaintStatus(
+    id: string,
+    newStatut: ComplaintStatut,
+  ): Promise<Complaint> {
+    const complaint = await this.complaintModel
+      .findByIdAndUpdate(id, { statut: newStatut }, { new: true })
+      .exec();
+    if (!complaint) {
+      throw new NotFoundException('Painte non trouvée');
     }
-
-    return this.complaintsCollection.find(query).toArray();
+    return complaint;
   }
 
-  async exportComplaints() {
-    return this.complaintsCollection.find({}).toArray();
+  //TODO: ordonner les plaintes par statut et date de publication
+  async allComplaintAssignedToTech(
+    technicienId: string,
+  ): Promise<Complaint[] | null> {
+    const complaints = await this.complaintModel
+      .find({
+        technicien_id: technicienId,
+      })
+      .exec();
+    if (!complaints || complaints.length === 0) {
+      throw new NotFoundException('Aucune plainte assignée à cet utilisateur');
+    }
+    return complaints;
   }
 
-  async disableComplaint(id: string) {
-    const result = await this.complaintsCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { status: 'suspendue' } }
-    );
-    if (result.matchedCount === 0) {
+  async assignComplaintToTechnician(
+    complaintId: string,
+    technicienId: string,
+  ): Promise<Complaint> {
+    const complaint = await this.complaintModel
+      .findByIdAndUpdate(
+        complaintId,
+        { technicien_id: technicienId },
+        { new: true },
+      )
+      .exec();
+    if (!complaint) {
       throw new NotFoundException('Plainte non trouvée');
     }
-    return { message: 'Plainte suspendue avec succès' };
+    return complaint;
   }
 
-  async enableComplaint(id: string) {
-    const result = await this.complaintsCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { status: 'active' } }
-    );
-    if (result.matchedCount === 0) {
-      throw new NotFoundException('Plainte non trouvée');
+  async getUnassignedComplaints(): Promise<Complaint[]> {
+    const complaints = await this.complaintModel
+      .find({
+        technicien_id: { $exists: false },
+        statut: { $in: [ComplaintStatut.SIGNALEE, ComplaintStatut.VALIDEE] },
+      })
+      .exec();
+    if (!complaints || complaints.length === 0) {
+      throw new NotFoundException('Aucune plainte non assignée trouvée');
     }
-    return { message: 'Plainte réactivée avec succès' };
+    return complaints;
   }
 }
