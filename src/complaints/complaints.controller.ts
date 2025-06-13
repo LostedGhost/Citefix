@@ -19,6 +19,7 @@ import { RolesGuard } from 'src/shared/guards/roles.guard';
 export class ComplaintsController {
   constructor(private readonly complaintsService: ComplaintsService) {}
 
+
   @Roles(Role.TECHNICIEN)
   @Patch(':id/start-intervention')
   startInterventionOnComplaint(@Param('id') id: string) {
@@ -84,5 +85,20 @@ export class ComplaintsController {
   @Get('unassigned')
   getUnassignedComplaints() {
     return this.complaintsService.getUnassignedComplaints();
+  }
+
+  @Get('export')
+  exportComplaints() {
+    return this.complaintsService.exportComplaints();
+  }
+
+  @Patch(':id/disable')
+  disableComplaint(@Param('id') id: string) {
+    return this.complaintsService.disableComplaint(id);
+  }
+
+  @Patch(':id/enable')
+  enableComplaint(@Param('id') id: string) {
+    return this.complaintsService.enableComplaint(id);
   }
 }
