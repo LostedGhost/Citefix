@@ -3,6 +3,7 @@ import { Complaint } from './schema/complaint.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ComplaintStatut } from './complaint-statut.enum';
+import { Parser } from 'json2csv';
 @Injectable()
 export class ComplaintsService {
   constructor(
@@ -72,5 +73,46 @@ export class ComplaintsService {
       throw new NotFoundException('Aucune plainte non assignée trouvée');
     }
     return complaints;
+  }
+
+  async exportPlaintes(): Promise<string> {
+    const complaints = await this.complaintModel.find().lean();
+
+    // Choisir les champs à exporter
+    const fields = [
+      '_id',
+      'description',
+      'statut',
+      'zone',
+      'date_publication',
+      'fonds_recu',
+      'citoyen_id',
+    ];
+    const opts = { fields };
+
+    const parser = new Parser(opts);
+    const csv = parser.parse(complaints);
+
+    return csv;
+  }
+
+  async disableComplaint(id: string): Promise<Complaint> {
+    const complaint = await this.complaintModel
+      .findByIdAndUpdate(id, { is_active: false }, { new: true })
+      .exec();
+    if (!complaint) {
+      throw new NotFoundException('Plainte non trouvée');
+    }
+    return complaint;
+  }
+
+  async enableComplaint(id: string): Promise<Complaint> {
+    const complaint = await this.complaintModel
+      .findByIdAndUpdate(id, { is_active: true }, { new: true })
+      .exec();
+    if (!complaint) {
+      throw new NotFoundException('Plainte non trouvée');
+    }
+    return complaint;
   }
 }
